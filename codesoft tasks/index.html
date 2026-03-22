@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Maker</title>
+  <style>
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --bg-color: #F9FAFB;
+      --card-bg: #FFFFFF;
+      --text-main: #111827;
+      --text-muted: #6B7280;
+      --border: #E5E7EB;
+      --success: #10B981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      line-height: 1.6;
+    }
+
+    /* Navigation */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 5%;
+      background: var(--card-bg);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .nav-brand {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    button:hover { background: var(--border); }
+
+    button.primary, .btn.primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    button.primary:hover, .btn.primary:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Layout */
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; animation: fadeIn 0.3s ease-in; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header-section { margin-bottom: 2rem; }
+    .header-section p { color: var(--text-muted); }
+
+    /* Grid & Cards */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+
+    .quiz-card {
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .quiz-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+      border-color: var(--primary);
+    }
+
+    /* Quiz Taker */
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .progress {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .options-grid {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .option-btn {
+      width: 100%;
+      text-align: left;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card-bg);
+      font-size: 1rem;
+    }
+
+    .option-btn:hover {
+      border-color: var(--primary);
+      background: #EEF2FF;
+    }
+
+    /* Results */
+    .text-center { text-align: center; }
+    .score-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: #EEF2FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 2rem auto;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .mt-2 { margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">Quiz Platform</div>
+    <div class="nav-links">
+      <button onclick="showView('home')">Home</button>
+      <button class="primary" onclick="alert('Create Quiz UI coming next!')">Create Quiz</button>
+    </div>
+  </nav>
+
+  <main class="container">
+    <section id="view-home" class="view active">
+      <div class="header-section">
+        <h1>Available Quizzes</h1>
+        <p>Select a quiz below to test your knowledge.</p>
+      </div>
+      <div id="quiz-list" class="grid-container">
+        </div>
+    </section>
+
+    <section id="view-quiz" class="view">
+      <div class="quiz-header">
+        <h2 id="quiz-title">Quiz Title</h2>
+        <span class="progress" id="quiz-progress">Question 1 / 5</span>
+      </div>
+      <div class="card">
+        <h3 id="question-text">Question text goes here?</h3>
+        <div id="options-container" class="options-grid">
+          </div>
+      </div>
+    </section>
+
+    <section id="view-results" class="view text-center">
+      <div class="card result-card">
+        <h2>Quiz Complete!</h2>
+        <div class="score-circle">
+          <span id="score-display">0/0</span>
+        </div>
+        <p id="score-message">Great job!</p>
+        <button class="btn primary mt-2" onclick="showView('home')">Back to Quizzes</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --- Mock Data ---
+    const quizzes = [
+      {
+        id: 1,
+        title: "Shinobi Tactics",
+        description: "Test your knowledge of the ninja world.",
+        questions: [
+          { text: "Who is famously known as the Copy Ninja?", options: ["Itachi", "Kakashi", "Obito", "Jiraiya"], answer: 1 },
+          { text: "Which ocular jutsu allows the user to cast the Infinite Tsukuyomi?", options: ["Byakugan", "Sharingan", "Rinnegan", "Rinne Sharingan"], answer: 3 },
+          { text: "What village does the Ghost of the Uchiha originate from?", options: ["Hidden Sand", "Hidden Cloud", "Hidden Leaf", "Hidden Mist"], answer: 2 }
+        ]
+      },
+      {
+        id: 2,
+        title: "Battle Royale: Survival",
+        description: "Drop in and test your tactical knowledge.",
+        questions: [
+          { text: "Which character is known for their 'Drop the Beat' healing aura?", options: ["Chrono", "Alok", "Kelly", "Hayato"], answer: 1 },
+          { text: "What is the highest achievable rank in standard competitive mode?", options: ["Heroic", "Grandmaster", "Diamond", "Master"], answer: 1 },
+          { text: "Which weapon is an Assault Rifle?", options: ["MP40", "AWM", "AK47", "M1014"], answer: 2 }
+        ]
+      }
+    ];
+
+    // --- State Variables ---
+    let currentQuiz = null;
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    // --- DOM Elements ---
+    const views = document.querySelectorAll('.view');
+    const quizListContainer = document.getElementById('quiz-list');
+
+    // --- Functions ---
+    function showView(viewId) {
+      views.forEach(v => v.classList.remove('active'));
+      document.getElementById(`view-${viewId}`).classList.add('active');
+      
+      if (viewId === 'home') renderQuizList();
+    }
+
+    function renderQuizList() {
+      quizListContainer.innerHTML = '';
+      quizzes.forEach(quiz => {
+        const card = document.createElement('div');
+        card.className = 'card quiz-card';
+        card.innerHTML = `
+          <h3>${quiz.title}</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">${quiz.description}</p>
+          <p style="margin-top: 1rem; font-weight: 500;">${quiz.questions.length} Questions</p>
+        `;
+        card.onclick = () => startQuiz(quiz.id);
+        quizListContainer.appendChild(card);
+      });
+    }
+
+    function startQuiz(quizId) {
+      currentQuiz = quizzes.find(q => q.id === quizId);
+      currentQuestionIndex = 0;
+      score = 0;
+      
+      document.getElementById('quiz-title').textContent = currentQuiz.title;
+      showView('quiz');
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = currentQuiz.questions[currentQuestionIndex];
+      document.getElementById('quiz-progress').textContent = `Question ${currentQuestionIndex + 1} / ${currentQuiz.questions.length}`;
+      document.getElementById('question-text').textContent = q.text;
+      
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+      
+      q.options.forEach((opt, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.textContent = opt;
+        btn.onclick = () => handleAnswer(index);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(selectedIndex) {
+      const correctIndex = currentQuiz.questions[currentQuestionIndex].answer;
+      if (selectedIndex === correctIndex) score++;
+      
+      currentQuestionIndex++;
+      
+      if (currentQuestionIndex < currentQuiz.questions.length) {
+        renderQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      document.getElementById('score-display').textContent = `${score}/${currentQuiz.questions.length}`;
+      showView('results');
+    }
+
+    // Initialize application
+    renderQuizList();
+  </script>
+</body>
+</html>
